@@ -1,0 +1,47 @@
+# Lint and test Guild on Windows and Linux on every push and pull request.
+name: CI
+run-name: CI ${{ github.ref_name }} ${{ github.sha }}
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Lint and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Pester and PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser -Force -SkipPublisherCheck
+          Install-Module PSScriptAnalyzer -MinimumVersion 1.21.0 -Scope CurrentUser -Force
+
+      - name: Configure git for the tests
+        shell: pwsh
+        run: |
+          git config --global user.name 'Guild CI'
+          git config --global user.email 'ci@example.invalid'
+          git config --global init.defaultBranch main
+
+      - name: Build
+        shell: pwsh
+        run: ./build.ps1

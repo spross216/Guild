@@ -1,0 +1,4 @@
+# Local installs into this repository while testing
+.guild/
+# Local neutrality terms (company and product names the framework must never mention)
+tests/neutral-terms.local.txt
