@@ -27,7 +27,8 @@ restated in each one, and agents that approve their own work. Guild separates th
 
 ## Quick start
 
-Requires PowerShell 7.2+ and git.
+Requires PowerShell 7.2+ and git; the read-only guard assumes PowerShell 7.3 or later argument passing
+for native commands.
 
 ```powershell
 git clone https://github.com/spross216/Guild.git
@@ -76,11 +77,11 @@ The same reviewer, rendered from one source with the example pack:
 name: acme-reviewer
 description: "Independent read-only reviewer and debugger. ... Use proactively for: reviewing a change
   or pull request, approving work, debugging a failing build, deploy or running system."
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob, Bash, PowerShell
 model: opus
 hooks:
   PreToolUse:
-    - matcher: "Bash"
+    - matcher: "Bash|PowerShell"
       hooks:
         - type: command
           command: "pwsh ... guards/Test-GuildReadOnlyCommand.ps1 -Allow 'Test-AcmeProject'"
@@ -111,6 +112,12 @@ author is never the only reviewer, and high-risk work gets independent tests and
 **Enforced, not just asked:** in Claude Code, read-only roles run behind a hook that blocks shell
 commands that change things, and the architect behind one that only allows Markdown edits. Where a
 tool has no such hook, Guild says so instead of pretending.
+
+The command guard fails closed: PowerShell is parsed and checked against an allowlist of commands,
+parameters and syntax, Bash is limited to a narrow subset, and nothing unlisted runs. It also denies,
+on a best-effort basis, reads that print secret values. It covers both the Bash and PowerShell tools
+and needs Claude Code 2.1.295 or later, which `Test-GuildInstall` checks. It is a guardrail for
+cooperative agents, not a security boundary; the design is in [`docs/guard.md`](docs/guard.md).
 
 ## Supported tools
 
@@ -171,6 +178,10 @@ The reasoning is recorded in [`docs/decisions/`](docs/decisions):
 - [0002](docs/decisions/0002-no-orchestrator-agent.md) No orchestrator agent
 - [0003](docs/decisions/0003-docs-access-and-documentation-ownership.md) Docs access and documentation ownership
 - [0004](docs/decisions/0004-routing-in-always-read-files.md) Routing in the files each tool always reads
+- [0005](docs/decisions/0005-fail-closed-read-only-guard.md) A fail-closed read-only guard
+
+The first end-to-end trial, and what to change before larger projects:
+[`docs/evaluations/2026-10-first-trial.md`](docs/evaluations/2026-10-first-trial.md).
 
 ## Limits
 

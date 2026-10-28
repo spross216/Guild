@@ -118,16 +118,20 @@ function New-GuildRoleFile {
                 if ($allow) { $command += " -Allow '$($allow -join ',')'" }
                 'hooks:'
                 '  PreToolUse:'
-                '    - matcher: "Bash"'
+                '    - matcher: "Bash|PowerShell"'
                 '      hooks:'
                 '        - type: command'
                 "          command: $(ConvertTo-GuildYamlString $command)"
+                '          timeout: 30'
+                '          onFailure: block'
                 if ($Role.Access -eq 'docs') {
                     $docsGuard = (Join-Path $script:GuildRepoRoot 'guards/Test-GuildDocsEdit.ps1').Replace('\', '/')
                     '    - matcher: "Edit|Write|MultiEdit|NotebookEdit"'
                     '      hooks:'
                     '        - type: command'
                     "          command: $(ConvertTo-GuildYamlString "pwsh -NoProfile -NonInteractive -File '$($docsGuard.Replace("'", "''"))'")"
+                    '          timeout: 30'
+                    '          onFailure: block'
                 }
             }
         }

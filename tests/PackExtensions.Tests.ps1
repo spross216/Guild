@@ -52,7 +52,7 @@ Describe 'Pack roles' {
         New-Item -ItemType Directory $project | Out-Null
         Install-GuildAgents -Harness claude -Scope Project -Path $project -Pack $Pack -InformationAction SilentlyContinue | Out-Null
         $text = Get-Content (Join-Path $project '.claude/agents/guild-security.md') -Raw
-        $text | Should -Match 'tools: Read, Grep, Glob, Bash\n'
+        $text | Should -Match 'tools: Read, Grep, Glob, Bash, PowerShell\n'
         $text | Should -Match 'PreToolUse'
         $text | Should -Match 'model: opus'
     }

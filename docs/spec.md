@@ -35,14 +35,31 @@ The same role sources are used in all three. Only the rendered text differs.
 
 Access levels: **write** (code and docs), **docs** (Markdown only: enforced in Claude Code by a hook on
 file edits, asked per edit in OpenCode, stated elsewhere; shell limited like read-only), **read-only**
-(no edits; shell guarded).
+(no edits; shell guarded). In Claude Code, docs and read-only roles have the Bash and PowerShell tools,
+both behind the guard (matcher `Bash|PowerShell`).
 
 ## Commands for agents
 
 Deterministic steps the roles use (each role file includes the table and the import line):
 `Get-GuildContext`, `New-GuildBrief`, `New-GuildDecision`, `Test-GuildDocs`, `Get-GuildRepoSurvey`,
-`New-GuildStandardsRepo`, `Add-GuildFinding`, `Get-GuildFindingSummary`. The read-only ones are always
-on the guard's allow list; `New-GuildDecision` is allowed for docs roles.
+`New-GuildStandardsRepo`, `Add-GuildFinding`, `Get-GuildFindingSummary`. The read-only ones are built into
+the guard's rule data. `New-GuildDecision` is built in too, but it needs `-Allow`, which the installer
+passes to docs roles. Availability is per role, as the table in `core/tools.md` says (its "Available to"
+column): `New-GuildDecision` is for write and docs roles, `New-GuildStandardsRepo` for write roles,
+`Add-GuildFinding` for write roles and the main session, and the rest for every role.
+
+The guard fails closed and is a guardrail, not a security boundary: PowerShell commands are parsed and
+checked against an allowlist (commands, parameters written in full, members, variables), Bash commands are
+limited to a narrow subset, and native commands (`git`, `rg`, `sort`, cloud and cluster tools) follow one set
+of option rules. Reads that print secret values, local credential files and environment dumps are denied on a
+best-effort basis: the denies name specific forms, and some reads stay allowed. What is deliberately left out
+is listed in [guard.md](guard.md) §10. The design is [guard.md](guard.md); the reasons and the threat model are
+in [decision 0005](decisions/0005-fail-closed-read-only-guard.md). The rules live in
+`guards/Test-GuildReadOnlyCommand.psd1`.
+
+Generated agents load Guild with an absolute `Import-Module '<path>'` line for `Guild/Guild.psd1` in this
+repository, and a pack's modules get the same kind of line. Nothing is linked into the user's module
+directory: that folder can be synced by a cloud-sync client, so the install doesn't create links there.
 
 ### Synthesized standards
 
@@ -197,6 +214,11 @@ home directory or project) records each file's hash, source and the harnesses us
 overwrites a file it didn't write, won't replace a hand-edited one without `-Force`, removes files no
 longer produced, and keeps shared files until no harness uses them. `$env:GUILD_HOME` replaces the
 home directory for user scope (tests, sandboxes).
+
+`Test-GuildInstall` compares what is installed with what the install would write now. Besides each file's status
+(Current, Missing, Outdated, Edited or Foreign), it reports the guard scripts and rule data file a hook names
+(Kind `Guard`), and, for the `claude` harness, the Claude Code version (Kind `Claude`): Current from 2.1.295, where
+`onFailure: block` was added; Outdated below it; Unknown when `claude` isn't on the PATH.
 
 ## Models
 

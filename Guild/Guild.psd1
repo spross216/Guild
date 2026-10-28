@@ -1,6 +1,6 @@
 @{
     RootModule        = 'Guild.psm1'
-    ModuleVersion     = '0.3.0'
+    ModuleVersion     = '0.5.1'
     GUID              = '5b0c4f7e-2d8a-4a63-9f3e-6c1d2b7a9e41'
     Author            = 'Sean Ross'
     Description       = 'Portable agent roles (architect, builder, reviewer, steward) for any agent harness, configured by data-only packs.'
